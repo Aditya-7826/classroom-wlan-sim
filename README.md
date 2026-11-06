@@ -4,6 +4,8 @@
 
 ![Overview of the simulator](docs/screenshots/overview.png)
 
+> **No database or account needed.** The simulator runs entirely in your browser. Saving run history to Supabase is an optional extra; without it the app simply shows "Local only".
+
 ## Contents
 
 1. [Introduction](#introduction)
@@ -107,7 +109,7 @@ winget install OpenJS.NodeJS.LTS
 winget install Git.Git
 
 # 2. Get the code (close and reopen PowerShell after installing)
-git clone https://github.com/<your-username>/classroom-wlan-sim.git
+git clone https://github.com/Aditya-7826/classroom-wlan-sim.git
 cd classroom-wlan-sim
 
 # 3. Install and run
@@ -122,7 +124,7 @@ npm run dev
 brew install node@24 git
 
 # 2. Get the code
-git clone https://github.com/<your-username>/classroom-wlan-sim.git
+git clone https://github.com/Aditya-7826/classroom-wlan-sim.git
 cd classroom-wlan-sim
 
 # 3. Install and run
@@ -140,7 +142,7 @@ source ~/.bashrc
 nvm install 24
 
 # 2. Get the code
-git clone https://github.com/<your-username>/classroom-wlan-sim.git
+git clone https://github.com/Aditya-7826/classroom-wlan-sim.git
 cd classroom-wlan-sim
 
 # 3. Install and run
@@ -219,7 +221,7 @@ The simulation lives in `src/sim/` and does not import React. `step(state)` take
 
 ## Optional: save run history with Supabase
 
-The app works fully without a database. If you connect one, it saves an anonymous summary each time a round finishes or you pause a simulation, and shows the last 10 runs.
+**You can skip this section.** The app works fully without a database. If you connect one, it saves an anonymous summary each time a round finishes or you pause a simulation, and shows the last 10 runs.
 
 1. Create a free project at [supabase.com](https://supabase.com).
 2. Open **SQL Editor**, paste the contents of `supabase/migrations/20261106224500_create_simulation_runs.sql`, and run it.
