@@ -1,0 +1,44 @@
+/* Design tokens — the only place colours, radii and motion are defined. */
+:root {
+  --bg: #0f1623;
+  --surface: #151d2b;
+  --surface-2: #1b2535;
+  --border: #283344;
+  --text: #e2e7ee;
+  --text-muted: #97a3b5;
+  --accent: #6a96cf; /* main action / transmit */
+  --success: #5ea887; /* success / ACK */
+  --warning: #c4a15e; /* backoff */
+  --danger: #c46f6c; /* collision */
+  --special: #958ac2; /* hidden node */
+  --radius: 14px;
+  --focus: 0 0 0 3px rgba(106, 150, 207, 0.45);
+
+  /* Derived, low-saturation tints for slot and chip backgrounds */
+  --accent-soft: rgba(106, 150, 207, 0.14);
+  --success-soft: rgba(94, 168, 135, 0.14);
+  --warning-soft: rgba(196, 161, 94, 0.13);
+  --danger-soft: rgba(196, 111, 108, 0.15);
+  --special-soft: rgba(149, 138, 194, 0.15);
+  --on-accent: #0f1623;
+
+  --radius-sm: 8px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --font: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-mono: ui-monospace, 'Cascadia Mono', 'SF Mono', Menlo, Consolas, monospace;
+  --motion: 160ms ease-out;
+  --max-width: 1200px;
+
+  color-scheme: dark;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion: 0ms linear;
+  }
+}

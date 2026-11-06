@@ -1,0 +1,26 @@
+# Dependencies and build output
+node_modules
+dist
+dist-ssr
+coverage
+
+# Environment files (keep only the blank example)
+.env*
+!.env.example
+
+# Deployment / tooling folders
+.vercel
+.claude/
+CLAUDE.md
+
+# Logs
+*.log
+npm-debug.log*
+
+# Editor and OS files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+Thumbs.db
+*.sw?
