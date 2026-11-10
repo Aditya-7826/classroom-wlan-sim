@@ -1,5 +1,4 @@
-import { DATA_SLOTS, MAX_ATTEMPTS } from '../sim/engine';
-import type { Station, StationState } from '../sim/types';
+import type { ModelParams, Station, StationState } from '../sim/types';
 import { Icon, type IconName } from './Icon';
 
 const STATE: Record<StationState, { label: string; icon: IconName; tone: string }> = {
@@ -13,7 +12,7 @@ const STATE: Record<StationState, { label: string; icon: IconName; tone: string 
   dropped: { label: 'Dropped', icon: 'drop', tone: 'danger' },
 };
 
-function describe(st: Station): { text: string; progress: number } {
+function describe(st: Station, params: ModelParams): { text: string; progress: number } {
   switch (st.state) {
     case 'sensing':
       return {
@@ -32,22 +31,22 @@ function describe(st: Station): { text: string; progress: number } {
     case 'transmitting':
       return {
         text: st.corrupted ? 'Sending — but the frame is garbled at the AP' : 'Sending its frame',
-        progress: ((DATA_SLOTS - st.txRemaining) / DATA_SLOTS) * 100,
+        progress: ((params.frameSlots - st.txRemaining) / params.frameSlots) * 100,
       };
     case 'waitingAck':
       return { text: 'Listening for the access point’s ACK', progress: 100 };
     case 'done':
       return { text: 'Frame delivered', progress: 100 };
     case 'dropped':
-      return { text: `Gave up after ${MAX_ATTEMPTS} attempts`, progress: 100 };
+      return { text: `Gave up after ${params.maxAttempts} attempt${params.maxAttempts === 1 ? '' : 's'}`, progress: 100 };
     default:
       return { text: 'Nothing to send', progress: 0 };
   }
 }
 
-export function DeviceCard({ station }: { station: Station }) {
+export function DeviceCard({ station, params }: { station: Station; params: ModelParams }) {
   const info = STATE[station.state];
-  const { text, progress } = describe(station);
+  const { text, progress } = describe(station, params);
   const showAttempt = station.hasFrame && station.state !== 'done' && station.state !== 'dropped';
 
   return (
@@ -81,7 +80,7 @@ export function DeviceCard({ station }: { station: Station }) {
           <dt>Attempts</dt>
           <dd>
             {station.totalAttempts}
-            {showAttempt && <small> · try {station.attempt}/{MAX_ATTEMPTS}</small>}
+            {showAttempt && <small> · try {station.attempt}/{params.maxAttempts}</small>}
           </dd>
         </div>
         <div>

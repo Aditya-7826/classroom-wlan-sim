@@ -40,8 +40,10 @@ This simulator slows everything down to one slot at a time. You can watch every 
 - **Lecture demo** — step through one round on the projector and explain each slot.
 - **Lab exercise** — students change devices and load, then record collisions and utilisation.
 - **Self-study and revision** — replay a seed until the backoff rules make sense.
-- **Explaining hidden nodes** — switch on the hidden-node toggle and see two stations that cannot hear each other collide.
+- **Explaining hidden nodes** — switch on the hidden-node toggle, pick which students cannot hear each other, and watch them collide.
 - **Comparing light vs heavy load** — run the same device count on light and heavy traffic and compare the summary counters.
+- **Comparing many scenarios at once** — tick several device counts (2–20), loads and hidden-node settings, and get a side-by-side results table averaged over several seeds.
+- **"What if" experiments** — change the wait windows, retry limit, frame length or round length and see how the results move.
 
 ## See it working
 
@@ -50,14 +52,16 @@ This simulator slows everything down to one slot at a time. You can watch every 
 | Overview | ![Overview](docs/screenshots/overview.png) |
 | A collision | ![Collision](docs/screenshots/collision.png) |
 | Hidden-node problem | ![Hidden node](docs/screenshots/hidden-node.png) |
+| Compare scenarios | ![Compare scenarios](docs/screenshots/compare.png) |
 | Mobile layout | ![Mobile](docs/screenshots/mobile.png) |
 
 ### Try this
 
-1. **See a collision.** Set **10 devices**, **Heavy** load, keep **Repeatable scenario** on with seed **5**, then press **Run one round** a few times. Watch the red *Collision* slots and the doubling wait windows (0–7 → 0–15).
-2. **See the hidden-node problem.** Press **Reset**, set **6 devices**, **Medium** load, switch on **Hidden-node problem** and keep seed **60**. Press **Run one round**: Student 2 starts sending in slot 2, Student 1 (who cannot hear it) joins in slot 3, and both frames are lost.
-3. **See a dropped frame.** Keep **Heavy** load, press **Run simulation** and wait until the *Dropped frames* counter goes up. Read the event log to see the fourth failed attempt.
-4. **Compare loads.** Run 10 rounds on **Light**, note the utilisation, then do the same on **Heavy**.
+1. **See a collision.** Set **10 devices**, **Heavy** load, keep **Repeatable scenario** on and type seed **5**, then press **Run one round**. Round 1 has three collisions. Watch the *Collision* slots and the doubling wait windows (0–7 → 0–15).
+2. **See the hidden-node problem.** Set **6 devices**, **Medium** load, switch on **Hidden-node problem** and use seed **105** (the default). Press **Run one round**: Student 1 starts sending in slot 2, Student 2 (who cannot hear it) joins in slot 3, and both frames are lost.
+3. **See a dropped frame.** Set **20 devices** and **Heavy** load, keep seed **105**, and press **Run simulation**. By round 5 the *Dropped frames* counter goes up. Read the event log to see the fourth failed attempt.
+4. **Compare scenarios.** Scroll to **Compare scenarios**. Keep device counts 5, 10, 15 and 20, tick all three preset loads, and press **Run comparison**. Collisions rise and utilisation falls as the room fills up.
+5. **Change the rules.** Open **Model settings**, set the largest wait window to **0–15**, and run the same comparison again. With 20 devices the window can no longer grow enough, so collisions and drops climb.
 
 ## How CSMA/CA works here
 
@@ -76,16 +80,41 @@ flowchart TD
     H -->|Yes| J[Drop the frame]
 ```
 
+The flowchart shows the default values. Every number in it can be changed under **Model settings**.
+
 Key rules in this teaching model:
 
+- **2 to 20 devices** (Student 1 … Student 20) share one access point.
 - The wait (backoff) is picked from **0 to CW**. CW starts at **7** and doubles after each failure, up to **63**. These are simplified values.
 - Countdowns only tick on **idle** slots. They **freeze** while someone else is sending.
 - A frame lasts **2 slots** and is followed by **1 ACK slot** from the access point.
 - Wi-Fi radios generally **cannot detect a collision while sending**. They only infer it because no ACK arrives.
 - A frame gets **4 attempts** in total. After the fourth failure it is dropped.
-- Traffic load is the chance each idle device has a new frame each round: light ≈ 30%, medium ≈ 60%, heavy ≈ 90%.
-- **Hidden-node mode:** Students 1 and 2 cannot hear each other, so their countdowns do not freeze for each other. They are uploading coursework, so they always have a frame ready.
+- Traffic load is the chance each idle device has a new frame each round: light ≈ 30%, medium ≈ 60%, heavy ≈ 90%, or a **custom** 0–100%.
+- **Hidden-node mode:** the chosen students (Students 1 and 2 by default, at least two) cannot hear each other, so their countdowns do not freeze for each other. They are uploading coursework, so they always have a frame ready. A collision only counts as a *hidden-node collision* when a student starts sending over someone it could not hear. Two students who simply reach zero in the same slot cause an ordinary collision.
 - One round is a 12-slot window. Unfinished frames carry over into the next round.
+
+### Model settings you can change
+
+| Setting | Default | Range |
+| --- | --- | --- |
+| Starting wait window | 0–7 | 0–1, 0–3, 0–7, 0–15, 0–31, 0–63 |
+| Largest wait window | 0–63 | 0–7 up to 0–1023 (never below the starting window) |
+| Attempts per frame | 4 | 1–10 |
+| Frame length | 2 slots (+1 ACK slot) | 1–4 slots |
+| Slots per round | 12 | 6–40 |
+
+Windows are always 2ⁿ − 1, so doubling stays on the same ladder. **Restore defaults** puts every value back.
+
+### Compare scenarios
+
+The **Compare scenarios** panel runs many settings without animation and shows them in one table:
+
+- Tick any device counts (2–20), loads (light, medium, heavy, custom) and hidden-node off/on.
+- Choose **rounds per run** (1–200) and **seeds to average** (1–10). Every scenario uses the same seeds, starting from the seed shown in the Scenario panel, so the comparison is fair and repeatable.
+- The current model settings and hidden students are used. If a chosen hidden student does not exist at a smaller device count, Students 1 and 2 are used, and the table shows which ones.
+- The table shows the averages for delivered frames, collisions, hidden-node collisions, retries and dropped frames. It also shows the delivery rate (delivered ÷ (delivered + dropped)) and utilisation, and marks the best utilisation and the most collisions.
+- Very large comparisons (over 1,000,000 simulated slots) are blocked with a message. Running comparisons can be cancelled.
 
 ## Run it on any laptop
 
@@ -168,14 +197,19 @@ npm test          # run the simulation-engine tests
 | `Unsupported engine` or odd install errors | Your Node version is too old (or is v25). Install Node 24 LTS, or run `nvm use` in the project folder. |
 | Blank page | Open the browser console (F12). Make sure you opened the URL that `npm run dev` printed, and run `npm install` again after pulling changes. |
 | Pill says "Local only" | That is normal without Supabase. See the optional section below. |
+| "Local only" even with Supabase set up | Check that you ran **both** migration files, in order, then restart `npm run dev`. |
+| Comparison button is greyed out | Tick at least one option in each group, or lower the rounds or seeds (the message under the button says which). |
 
 ## Architecture
 
 ```mermaid
 flowchart LR
     subgraph Browser
-        UI[UI components<br/>Controls, Timeline, DeviceCard, ...] --> SIM[useSimulation hook<br/>owns the one timer]
+        UI[UI components<br/>Controls, Timeline, DeviceCard, ComparePanel, ...] --> SIM[useSimulation hook<br/>owns the one timer]
         SIM --> ENGINE[sim/engine.ts<br/>pure TypeScript]
+        UI --> CMP[useComparison hook<br/>chunked, cancellable]
+        CMP --> COMPARE[sim/compare.ts<br/>pure TypeScript]
+        COMPARE --> ENGINE
         UI --> HIST[useRunHistory hook]
         HIST --> CLIENT[lib/supabase.ts]
     end
@@ -190,17 +224,20 @@ classroom-wlan-sim/
 ├── docs/screenshots/          # images used in this README
 ├── public/favicon.svg
 ├── src/
-│   ├── components/            # Header, Controls, ChannelTimeline, DeviceCard,
-│   │                          # SummaryStats, EventLog, LearnPanel, DbStatus, RunHistory
+│   ├── components/            # Header, Controls, ChannelTimeline, DeviceCard, SummaryStats,
+│   │                          # EventLog, LearnPanel, ComparePanel, DbStatus, RunHistory
 │   ├── hooks/
 │   │   ├── useSimulation.ts   # state + the single interval timer
+│   │   ├── useComparison.ts   # runs comparisons in small, cancellable chunks
 │   │   └── useRunHistory.ts   # optional saving / loading of run summaries
 │   ├── lib/supabase.ts        # client, or null when not configured
 │   ├── sim/
 │   │   ├── random.ts          # seeded PRNG (mulberry32)
 │   │   ├── types.ts
-│   │   ├── engine.ts          # step(state) and runRound(state)
-│   │   └── engine.test.ts     # Vitest tests
+│   │   ├── engine.ts          # input checks, step(state), runRound(state), runRounds(state, n)
+│   │   ├── compare.ts         # builds and runs scenario comparisons
+│   │   ├── engine.test.ts     # Vitest tests, incl. 300 random scenarios checked for consistency
+│   │   └── compare.test.ts
 │   ├── styles/
 │   │   ├── tokens.css         # all colours and sizes
 │   │   └── app.css
@@ -217,14 +254,17 @@ The simulation lives in `src/sim/` and does not import React. `step(state)` take
 
 - the rules can be **unit-tested** without a browser;
 - the same seed and settings always give the **same run**;
-- the UI only *displays* state, so it cannot accidentally change the rules.
+- the UI only *displays* state, so it cannot accidentally change the rules;
+- the engine **checks every input itself**: out-of-range numbers are clamped, wait windows snap to valid values, and unknown options fall back to defaults, so no setting can put it in an impossible state.
 
 ## Optional: save run history with Supabase
 
-**You can skip this section.** The app works fully without a database. If you connect one, it saves an anonymous summary each time a round finishes or you pause a simulation, and shows the last 10 runs.
+**You can skip this section.** The app works fully without a database. If you connect one, it saves an anonymous summary each time a round finishes, or when you pause or reset a running simulation. The summary includes the model settings, and the app shows the last 10 runs. Comparison results are not saved.
 
 1. Create a free project at [supabase.com](https://supabase.com).
-2. Open **SQL Editor**, paste the contents of `supabase/migrations/20261106224500_create_simulation_runs.sql`, and run it.
+2. Open **SQL Editor** and run the two migration files **in this order**, pasting each one and pressing *Run*:
+   1. `supabase/migrations/20261106224500_create_simulation_runs.sql` — creates the table.
+   2. `supabase/migrations/20261110190000_extend_simulation_runs.sql` — allows up to 20 devices and adds the model-setting columns. It is safe to run on a table that already has rows.
 3. In **Project Settings → API**, copy the **Project URL** and the **publishable key**.
 4. Copy the example env file and fill in both values:
 
@@ -242,6 +282,8 @@ The simulation lives in `src/sim/` and does not import React. `step(state)` take
 ### Why the publishable key is safe here
 
 The publishable key is meant to be visible in the browser. It is only safe because **Row Level Security (RLS)** is turned on for the table. The policies allow anonymous users to **insert** rows that pass the range checks and to **read** rows. There are no update or delete policies, so nobody can change or remove saved runs.
+
+The table also has its own **check constraints**, so a row is rejected unless it makes sense. For example, the load must match the traffic level, the largest window cannot be smaller than the starting one, and the hidden count must fit the device count. The app clamps every value before saving, so a very long run never fails these checks.
 
 Things to know:
 
@@ -283,9 +325,13 @@ This is a **simplified teaching model**, not an IEEE 802.11-accurate simulation.
 
 - No real timing: no SIFS, DIFS or slot durations, and no PHY or radio physics.
 - No RTS/CTS, so the hidden-node problem is never solved here — on purpose.
-- Contention window values (7 to 63), the 2-slot frames and the 4-attempt limit are simplified.
+- The default contention windows (7 to 63), 2-slot frames and 4-attempt limit are simplified. The adjustable ranges are for experiments and are not real 802.11 values either.
 - Every device can always reach the access point. There is no signal strength, rate adaptation or interference from other networks.
-- Rounds are fixed 12-slot windows to keep the display readable.
+- Rounds are fixed windows (12 slots by default, 6–40 adjustable) to keep the display readable.
+- Hidden students always have a frame ready, so the hidden-node problem shows up quickly.
+- The guaranteed round-1 hidden-node collision for seed 105 holds only with the default model settings and the default hidden pair (Students 1 and 2). Other settings may need a few rounds or a different seed.
+- Comparisons run in the browser in small chunks. They are capped at about 1,000,000 simulated slots, so a run takes a few seconds at most.
+- Anonymous inserts to the optional run history can be spammed. That is acceptable for a class demo, and the table holds no personal data.
 
 ## Author and license
 

@@ -1,4 +1,4 @@
-export type TrafficLevel = 'light' | 'medium' | 'heavy';
+export type TrafficLevel = 'light' | 'medium' | 'heavy' | 'custom';
 export type Speed = 'slow' | 'normal' | 'fast';
 
 export type StationState =
@@ -15,11 +15,30 @@ export type SlotKind = 'idle' | 'backoff' | 'transmit' | 'ack' | 'collision';
 
 export type Tone = 'info' | 'success' | 'warning' | 'danger' | 'special';
 
+/** The simplified protocol numbers. All of them can be changed in the UI. */
+export interface ModelParams {
+  /** Starting contention window: the first wait is drawn from [0, cwMin]. */
+  cwMin: number;
+  /** Largest contention window after doubling. */
+  cwMax: number;
+  /** Total attempts per frame (first try + retries) before it is dropped. */
+  maxAttempts: number;
+  /** Length of one round's channel window, in slots. */
+  slotsPerRound: number;
+  /** Length of one data frame, in slots (the ACK adds one more). */
+  frameSlots: number;
+}
+
 export interface Settings {
-  deviceCount: number; // 2–10
+  deviceCount: number; // MIN_DEVICES–MAX_DEVICES
   traffic: TrafficLevel;
+  /** Chance (0–100) that an idle station gets a new frame each round. Fixed by the preset unless traffic is 'custom'. */
+  loadPercent: number;
   hiddenNode: boolean;
+  /** Stations that cannot hear one another. Empty when hiddenNode is off, otherwise at least two. */
+  hiddenIds: number[];
   seed: number;
+  params: ModelParams;
 }
 
 export interface Station {
@@ -66,6 +85,8 @@ export interface SimEvent {
 export interface Summary {
   successes: number;
   collisions: number;
+  /** Collisions caused by a station starting while one it cannot hear was already sending. */
+  hiddenCollisions: number;
   retries: number;
   dropped: number;
   rounds: number;
@@ -102,13 +123,21 @@ export interface SimState {
   outcomeTone: Tone;
 }
 
-/** What gets saved to the run history. */
+/** What gets saved to the run history and shown in comparisons. */
 export interface RunSummary {
   deviceCount: number;
   traffic: TrafficLevel;
+  loadPercent: number;
   hiddenNode: boolean;
+  hiddenCount: number;
+  cwMin: number;
+  cwMax: number;
+  maxAttempts: number;
+  slotsPerRound: number;
+  frameSlots: number;
   successes: number;
   collisions: number;
+  hiddenCollisions: number;
   retries: number;
   dropped: number;
   rounds: number;

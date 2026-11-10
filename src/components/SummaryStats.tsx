@@ -1,10 +1,11 @@
 import { utilization } from '../sim/engine';
 import type { Summary } from '../sim/types';
 
-export function SummaryStats({ summary }: { summary: Summary }) {
+export function SummaryStats({ summary, hiddenNode }: { summary: Summary; hiddenNode: boolean }) {
   const items = [
     { label: 'Successful frames', value: summary.successes, tone: 'success' },
     { label: 'Collisions', value: summary.collisions, tone: 'danger' },
+    ...(hiddenNode ? [{ label: 'Hidden-node collisions', value: summary.hiddenCollisions, tone: 'special' }] : []),
     { label: 'Retries', value: summary.retries, tone: 'warning' },
     { label: 'Dropped frames', value: summary.dropped, tone: 'danger' },
     { label: 'Channel utilisation', value: `${utilization(summary).toFixed(0)}%`, tone: 'accent' },

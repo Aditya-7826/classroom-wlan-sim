@@ -1,5 +1,6 @@
 import { useCallback, useState } from 'react';
 import { ChannelTimeline } from './components/ChannelTimeline';
+import { ComparePanel } from './components/ComparePanel';
 import { Controls } from './components/Controls';
 import { DbStatus } from './components/DbStatus';
 import { DeviceCard } from './components/DeviceCard';
@@ -9,16 +10,19 @@ import { LearnPanel } from './components/LearnPanel';
 import { RunHistory } from './components/RunHistory';
 import { SummaryStats } from './components/SummaryStats';
 import { useRunHistory } from './hooks/useRunHistory';
-import { useSimulation, type ScenarioConfig } from './hooks/useSimulation';
-import { DEFAULT_SETTINGS, toRunSummary } from './sim/engine';
+import { normalizeConfig, useSimulation, type ScenarioConfig } from './hooks/useSimulation';
+import { DEFAULT_HIDDEN_IDS, DEFAULT_SETTINGS, toRunSummary } from './sim/engine';
 import type { SimState, Speed } from './sim/types';
 
 const INITIAL_CONFIG: ScenarioConfig = {
   deviceCount: DEFAULT_SETTINGS.deviceCount,
   traffic: DEFAULT_SETTINGS.traffic,
+  customLoad: 50,
   hiddenNode: DEFAULT_SETTINGS.hiddenNode,
+  hiddenIds: [...DEFAULT_HIDDEN_IDS],
   repeatable: true,
   seed: DEFAULT_SETTINGS.seed,
+  params: { ...DEFAULT_SETTINGS.params },
 };
 
 export default function App() {
@@ -30,6 +34,8 @@ export default function App() {
   const handleFinished = useCallback((s: SimState) => save(toRunSummary(s)), [save]);
   const sim = useSimulation(config, speed, handleFinished);
   const { state } = sim;
+  // Every change goes through normalizeConfig, so the UI can never hold an invalid scenario.
+  const changeConfig = useCallback((next: ScenarioConfig) => setConfig(normalizeConfig(next)), []);
 
   return (
     <>
@@ -47,7 +53,7 @@ export default function App() {
         <main id="main" className="layout">
           <Controls
             config={config}
-            onConfigChange={setConfig}
+            onConfigChange={changeConfig}
             speed={speed}
             onSpeedChange={setSpeed}
             mode={sim.mode}
@@ -62,7 +68,7 @@ export default function App() {
             {state.outcome}
           </p>
 
-          <ChannelTimeline slots={state.slots} round={state.round} />
+          <ChannelTimeline slots={state.slots} round={state.round} slotsPerRound={state.settings.params.slotsPerRound} />
 
           <section className="card" aria-labelledby="devices-title">
             <div className="card__head">
@@ -71,18 +77,20 @@ export default function App() {
             </div>
             <ul className="devices">
               {state.stations.map((st) => (
-                <DeviceCard key={st.id} station={st} />
+                <DeviceCard key={st.id} station={st} params={state.settings.params} />
               ))}
             </ul>
           </section>
 
           <div className="columns">
             <div className="stack">
-              <SummaryStats summary={state.summary} />
+              <SummaryStats summary={state.summary} hiddenNode={state.settings.hiddenNode} />
               <EventLog events={state.events} />
             </div>
-            <LearnPanel />
+            <LearnPanel params={state.settings.params} hiddenIds={state.settings.hiddenIds} />
           </div>
+
+          <ComparePanel config={config} seedInUse={state.settings.seed} />
 
           {history.status === 'connected' && <RunHistory runs={history.runs} />}
         </main>

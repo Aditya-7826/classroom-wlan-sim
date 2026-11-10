@@ -2,6 +2,17 @@ import type { RunRecord } from '../hooks/useRunHistory';
 
 const dateFormat = new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' });
 
+/** Rows come from a public table, so never let one odd value break the page. */
+function when(value: string): string {
+  const d = new Date(value);
+  return Number.isNaN(d.getTime()) ? '—' : dateFormat.format(d);
+}
+
+function num(value: unknown, digits = 0): string {
+  const n = Number(value);
+  return Number.isFinite(n) ? n.toFixed(digits) : '—';
+}
+
 export function RunHistory({ runs }: { runs: RunRecord[] }) {
   return (
     <section className="card" aria-labelledby="history-title">
@@ -17,7 +28,8 @@ export function RunHistory({ runs }: { runs: RunRecord[] }) {
                 <th scope="col">When</th>
                 <th scope="col">Devices</th>
                 <th scope="col">Load</th>
-                <th scope="col">Hidden node</th>
+                <th scope="col">Hidden</th>
+                <th scope="col">Model</th>
                 <th scope="col">Rounds</th>
                 <th scope="col">Successes</th>
                 <th scope="col">Collisions</th>
@@ -29,16 +41,22 @@ export function RunHistory({ runs }: { runs: RunRecord[] }) {
             <tbody>
               {runs.map((r) => (
                 <tr key={r.id}>
-                  <td>{dateFormat.format(new Date(r.created_at))}</td>
-                  <td>{r.device_count}</td>
-                  <td className="capitalize">{r.traffic_level}</td>
-                  <td>{r.hidden_node ? 'Yes' : 'No'}</td>
-                  <td>{r.rounds}</td>
-                  <td>{r.successes}</td>
-                  <td>{r.collisions}</td>
-                  <td>{r.retries}</td>
-                  <td>{r.dropped}</td>
-                  <td>{Number(r.channel_utilization).toFixed(0)}%</td>
+                  <td>{when(r.created_at)}</td>
+                  <td>{num(r.device_count)}</td>
+                  <td>
+                    <span className="capitalize">{String(r.traffic_level)}</span> ({num(r.load_percent)}%)
+                  </td>
+                  <td>{r.hidden_node ? `Yes (${num(r.hidden_count)})` : 'No'}</td>
+                  <td>
+                    CW {num(r.cw_min)}–{num(r.cw_max)}, {num(r.max_attempts)} tries, {num(r.frame_slots)}/
+                    {num(r.slots_per_round)} slots
+                  </td>
+                  <td>{num(r.rounds)}</td>
+                  <td>{num(r.successes)}</td>
+                  <td>{num(r.collisions)}</td>
+                  <td>{num(r.retries)}</td>
+                  <td>{num(r.dropped)}</td>
+                  <td>{num(r.channel_utilization)}%</td>
                 </tr>
               ))}
             </tbody>

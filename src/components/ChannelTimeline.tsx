@@ -1,4 +1,3 @@
-import { SLOTS_PER_ROUND } from '../sim/engine';
 import type { Slot, SlotKind } from '../sim/types';
 import { Icon } from './Icon';
 
@@ -10,13 +9,13 @@ const LEGEND: { kind: SlotKind; label: string; text: string }[] = [
   { kind: 'collision', label: 'Collision', text: 'frames overlap, nothing gets through' },
 ];
 
-export function ChannelTimeline({ slots, round }: { slots: Slot[]; round: number }) {
-  const cells = Array.from({ length: SLOTS_PER_ROUND }, (_, i) => slots[i] ?? null);
+export function ChannelTimeline({ slots, round, slotsPerRound }: { slots: Slot[]; round: number; slotsPerRound: number }) {
+  const cells = Array.from({ length: slotsPerRound }, (_, i) => slots[i] ?? null);
   return (
     <section className="card" aria-labelledby="timeline-title">
       <div className="card__head">
         <h2 id="timeline-title">Shared channel</h2>
-        <p className="muted">{round > 0 ? `Round ${round} · ${slots.length} of ${SLOTS_PER_ROUND} slots` : `${SLOTS_PER_ROUND} slots per round`}</p>
+        <p className="muted">{round > 0 ? `Round ${round} · ${slots.length} of ${slotsPerRound} slots` : `${slotsPerRound} slots per round`}</p>
       </div>
 
       <ol className="timeline">
